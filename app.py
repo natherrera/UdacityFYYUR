@@ -144,35 +144,35 @@ def venues():
                 element['venues'].append({
                     "id": venue.id,
                     "name": venue.name,
-                    "number_upcoming_shows": Show.query.filter_by(venue_id = venue.id).count()
+                    "number_upcoming_shows": Show.query.filter_by(venue_id=venue.id).count()
                 })
-                
+
     return render_template('pages/venues.html', areas=data_venue)
 
-        # TODO: replace with real venues data.
-        #       num_shows should be aggregated based on number of upcoming shows per venue.
-        # data = [{
-        #     "city": "San Francisco",
-        #     "state": "CA",
-        #     "venues": [{
-        #         "id": 1,
-        #         "name": "The Musical Hop",
-        #         "num_upcoming_shows": 0,
-        #     }, {
-        #         "id": 3,
-        #         "name": "Park Square Live Music & Coffee",
-        #         "num_upcoming_shows": 1,
-        #     }]
-        # }, {
-        #     "city": "New York",
-        #     "state": "NY",
-        #     "venues": [{
-        #         "id": 2,
-        #         "name": "The Dueling Pianos Bar",
-        #         "num_upcoming_shows": 0,
-        #     }]
-        # }]
-        # return render_template('pages/venues.html', areas=data)
+    # TODO: replace with real venues data.
+    #       num_shows should be aggregated based on number of upcoming shows per venue.
+    # data = [{
+    #     "city": "San Francisco",
+    #     "state": "CA",
+    #     "venues": [{
+    #         "id": 1,
+    #         "name": "The Musical Hop",
+    #         "num_upcoming_shows": 0,
+    #     }, {
+    #         "id": 3,
+    #         "name": "Park Square Live Music & Coffee",
+    #         "num_upcoming_shows": 1,
+    #     }]
+    # }, {
+    #     "city": "New York",
+    #     "state": "NY",
+    #     "venues": [{
+    #         "id": 2,
+    #         "name": "The Dueling Pianos Bar",
+    #         "num_upcoming_shows": 0,
+    #     }]
+    # }]
+    # return render_template('pages/venues.html', areas=data)
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -373,15 +373,28 @@ def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
+    search = request.form.get('search_term', '')
+    artists = Artist.query.filter(Artist.name.ilike("%" + search + "%")).all()
+    data = []
+
+    for artist in artists:
+        data.append(artist)
     response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(artists),
+        "data": data
     }
-    return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
+
+    return render_template('pages/search_artists.html', results=response, search_term=search)
+    
+    # response = {
+    #     "count": 1,
+    #     "data": [{
+    #         "id": 4,
+    #         "name": "Guns N Petals",
+    #         "num_upcoming_shows": 0,
+    #     }]
+    # }
+    # return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 
 @app.route('/artists/<int:artist_id>')
@@ -644,7 +657,7 @@ def create_show_submission():
         show.start_time = form.start_time.data
         show.artist_id = form.artist_id.data
         show.venue_id = form.venue_id.data
-        
+
         db.session.add(show)
         db.session.commit()
     except:
