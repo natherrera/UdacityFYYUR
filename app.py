@@ -46,7 +46,7 @@ class Venue(db.Model):
     phone = db.Column(db.String(120), nullable=False)
     website = db.Column(db.String(500), nullable=False)
     facebook_link = db.Column(db.String(120), nullable=False)
-    seeking_talent = db.Column(db.Boolean, nullable=False, default= False)
+    seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
     seeking_description = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
     shows = db.relationship('Shows', backref='venue', lazy=True)
@@ -124,30 +124,67 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data.
-    #       num_shows should be aggregated based on number of upcoming shows per venue.
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
-    return render_template('pages/venues.html', areas=data)
+    data_venue = []
+    venues = Venue.query.all()
+    venue_places = set()
+
+    for venue in venues:
+        venue_places.add((venue.city, venue.state))
+
+    # Create list for venue by places
+    for item in venue_places:
+        data_venue.append({
+            "city": item[0],
+            "state": item[1],
+            "venues": []
+        })
+
+    # Count upcoming shows
+    for venue in venues:
+        number_upcoming_shows = 0
+        shows = Shows.query.get(venue.id)
+        if shows is not None:
+            for show in shows:
+                if show.start_time > datetime.now():
+                    number_upcoming_shows += 1
+        else:
+            number_upcoming_shows = 0
+        # Mapping all venues for the same place
+        for element in data_venue:
+            if venue.city == element['city'] and venue.state == element['state']:
+                element['venues'].append({
+                    "id": venue.id,
+                    "name": venue.name,
+                    "number_upcoming_shows": number_upcoming_shows
+                })
+
+    # return and render data
+    return render_template('pages/venues.html', areas=data_venue)
+
+        # TODO: replace with real venues data.
+        #       num_shows should be aggregated based on number of upcoming shows per venue.
+        # data = [{
+        #     "city": "San Francisco",
+        #     "state": "CA",
+        #     "venues": [{
+        #         "id": 1,
+        #         "name": "The Musical Hop",
+        #         "num_upcoming_shows": 0,
+        #     }, {
+        #         "id": 3,
+        #         "name": "Park Square Live Music & Coffee",
+        #         "num_upcoming_shows": 1,
+        #     }]
+        # }, {
+        #     "city": "New York",
+        #     "state": "NY",
+        #     "venues": [{
+        #         "id": 2,
+        #         "name": "The Dueling Pianos Bar",
+        #         "num_upcoming_shows": 0,
+        #     }]
+        # }]
+        # return render_template('pages/venues.html', areas=data)
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -283,28 +320,30 @@ def create_venue_submission():
         venue.seeking_talent = form.seeking_talent.data
         venue.seeking_description = form.seeking_description.data
         venue.image_link = form.image_link.data
-        
+
         db.session.add(venue)
         db.session.commit()
         db.session.close()
     except:
-      error = True
-      db.session.rollback()
+        error = True
+        db.session.rollback()
     finally:
-      db.session.close()
-      if error:
-        abort (400)
-        flash('An error occured. Venue ' + name + ' could not be listed.')
-        return redirect(url_for('index'))
-      else:
-        flash('Venue ' + request.form['name'] + ' was successfully listed!')
-        return render_template('pages/home.html')
+        db.session.close()
+        if error:
+            abort(400)
+            flash('An error occured. Venue ' + name + ' could not be listed.')
+            return redirect(url_for('index'))
+        else:
+            flash('Venue ' + request.form['name'] +
+                  ' was successfully listed!')
+            return render_template('pages/home.html')
     #   on successful db insert, flash success
     # flash('Venue ' + request.form['name'] + ' was successfully listed!')
     # # DONE: on unsuccessful db insert, flash an error instead.
     # # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
     # # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     # return render_template('pages/home.html')
+
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -322,11 +361,11 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
     data = []
-    artists = Artist.query.all()    
-    for artist in artists:        
-        data.append({"id": artist.id, "name" : artist.name})
+    artists = Artist.query.all()
+    for artist in artists:
+        data.append({"id": artist.id, "name": artist.name})
     return render_template('pages/artists.html', artists=data)
- 
+
     # DONE: replace with real data returned from querying the database
     # data = [{
     #     "id": 4,
@@ -512,7 +551,7 @@ def create_artist_submission():
     # DONE: modify data to be the data object returned from db insertion
     # on successful db insert, flash success
     # DONE: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')  
+    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
     error = False
     form = ArtistForm()
     artist = Artist()
@@ -534,14 +573,15 @@ def create_artist_submission():
         error = True
         db.session.rollback()
         print(sys.exc_info())
-    finally: 
+    finally:
         flash('Artist ' + request.form['name'] + ' was successfully listed!')
         db.session.close()
     if error:
-        flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
+        flash('An error occurred. Artist ' +
+              request.form['name'] + ' could not be listed.')
         abort(400)
     else:
-      return render_template('pages/home.html')
+        return render_template('pages/home.html')
 
 
 #  Shows
@@ -608,29 +648,30 @@ def create_show_submission():
     # DONE: on unsuccessful db insert, flash an error instead.
     # e.g., flash('An error occurred. Show could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    #return render_template('pages/home.html')
+    # return render_template('pages/home.html')
     error = False
     body = {}
     try:
         start_time = request.form['start_time']
         artist_id = request.form['artist_id']
         venue_id = request.form['venue_id']
-        show = Show( start_time=start_time, artist_id=artist_id, venue_id=venue_id)
+        show = Show(start_time=start_time,
+                    artist_id=artist_id, venue_id=venue_id)
         print(show)
         db.session.add(show)
         db.session.commit()
     except:
         error = True
         db.session.rollback()
-    finally: 
+    finally:
         db.session.close()
     if error:
         abort(400)
         flash('An error occurred. Show could not be listed.')
         return redirect(url_for('index'))
     else:
-      flash('Show was successfully listed!')
-      return render_template('pages/home.html')
+        flash('Show was successfully listed!')
+        return render_template('pages/home.html')
 
 
 @app.errorhandler(404)
