@@ -49,10 +49,10 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
     seeking_description = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
-    shows = db.relationship('Shows', backref='venue', lazy=True)
+    shows = db.relationship('Show', backref='venue', lazy=True)
 
     def __repr__(self):
-        return f'< Venue {self.id} {self.name} {self.genres} {self.address} {self.city} {self.state} {self.phone} {self.website} {self.facebook_link} {self.seeking_talent} {self.seeking_description} {self.image_link}>'
+        return f'< Venue {self.id} {self.name}>'
 
     # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -71,14 +71,14 @@ class Artist(db.Model):
     seeking_venue = db.Column(db.Boolean, nullable=True, default=False)
     seeking_description = db.Column(db.String(200), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
-    shows = db.relationship('Shows', backref='artist', lazy=True)
+    shows = db.relationship('Show', backref='artist', lazy=True)
 
     def __repr__(self):
-        return f'< Artist {self.id} {self.name} {self.genres} {self.city} {self.state} {self.phone} {self.website} {self.facebook_link} {self.seeking_venue} {self.seeking_description} {self.image_link}>'
+        return f'< Artist {self.id} {self.name}>'
 
 
-class Shows(db.Model):
-    __tablename__ = 'Shows'
+class Show(db.Model):
+    __tablename__ = 'Show'
 
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.String(120), nullable=False)
@@ -87,7 +87,7 @@ class Shows(db.Model):
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
 
     def __repr__(self):
-        return f'< Show {self.id} {self.start_time}>'
+        return f'< Show {self.id}, Artist {self.artist_id}, Venue {self.venue_id}>'
 
     # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -131,7 +131,6 @@ def venues():
     for venue in venues:
         venue_places.add((venue.city, venue.state))
 
-    # Create list for venue by places
     for item in venue_places:
         data_venue.append({
             "city": item[0],
@@ -139,26 +138,15 @@ def venues():
             "venues": []
         })
 
-    # Count upcoming shows
     for venue in venues:
-        number_upcoming_shows = 0
-        shows = Shows.query.get(venue.id)
-        if shows is not None:
-            for show in shows:
-                if show.start_time > datetime.now():
-                    number_upcoming_shows += 1
-        else:
-            number_upcoming_shows = 0
-        # Mapping all venues for the same place
         for element in data_venue:
             if venue.city == element['city'] and venue.state == element['state']:
                 element['venues'].append({
                     "id": venue.id,
                     "name": venue.name,
-                    "number_upcoming_shows": number_upcoming_shows
+                    "number_upcoming_shows": Show.query.filter_by(venue_id = venue.id).count()
                 })
-
-    # return and render data
+                
     return render_template('pages/venues.html', areas=data_venue)
 
         # TODO: replace with real venues data.
@@ -650,14 +638,13 @@ def create_show_submission():
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     # return render_template('pages/home.html')
     error = False
-    body = {}
+    show = Show()
+    form = ShowForm()
     try:
-        start_time = request.form['start_time']
-        artist_id = request.form['artist_id']
-        venue_id = request.form['venue_id']
-        show = Show(start_time=start_time,
-                    artist_id=artist_id, venue_id=venue_id)
-        print(show)
+        show.start_time = form.start_time.data
+        show.artist_id = form.artist_id.data
+        show.venue_id = form.venue_id.data
+        
         db.session.add(show)
         db.session.commit()
     except:
