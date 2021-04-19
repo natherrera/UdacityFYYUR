@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 2152a070dd85
+Revision ID: d32e381fc577
 Revises: 
-Create Date: 2021-04-18 21:46:29.114969
+Create Date: 2021-04-19 00:19:08.054179
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2152a070dd85'
+revision = 'd32e381fc577'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,7 +21,7 @@ def upgrade():
     op.create_table('Artist',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('genres', sa.String(length=120), nullable=False),
+    sa.Column('genres', sa.ARRAY(sa.String()), nullable=False),
     sa.Column('city', sa.String(length=120), nullable=False),
     sa.Column('state', sa.String(length=120), nullable=False),
     sa.Column('phone', sa.String(length=120), nullable=False),
@@ -29,13 +29,13 @@ def upgrade():
     sa.Column('facebook_link', sa.String(length=120), nullable=False),
     sa.Column('seeking_venue', sa.Boolean(), nullable=True),
     sa.Column('seeking_description', sa.String(length=200), nullable=False),
-    sa.Column('image_link', sa.String(length=500), nullable=False),
+    sa.Column('image_link', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('Venue',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('genres', sa.String(length=120), nullable=False),
+    sa.Column('genres', sa.ARRAY(sa.String()), nullable=False),
     sa.Column('address', sa.String(length=120), nullable=False),
     sa.Column('city', sa.String(length=120), nullable=False),
     sa.Column('state', sa.String(length=120), nullable=False),
@@ -44,12 +44,12 @@ def upgrade():
     sa.Column('facebook_link', sa.String(length=120), nullable=False),
     sa.Column('seeking_talent', sa.Boolean(), nullable=False),
     sa.Column('seeking_description', sa.String(length=120), nullable=False),
-    sa.Column('image_link', sa.String(length=500), nullable=False),
+    sa.Column('image_link', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('Show',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('start_time', sa.String(length=120), nullable=False),
+    sa.Column('start_time', sa.DateTime(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
     sa.Column('venue_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['artist_id'], ['Artist.id'], ),
