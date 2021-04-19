@@ -270,20 +270,20 @@ def create_venue_submission():
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     error = False
     form = VenueForm()
+    venue = Venue()
     try:
-        name = request.form['name']
-        genres = request.form['genres']
-        address = request.form['address']
-        city = request.form['city']
-        state = request.form['state']
-        phone = request.form['phone']
-        website = request.form['website_link']
-        facebook_link = request.form['facebook_link']
-        seeking_talent = form.seeking_talent.data
-        seeking_description = request.form['seeking_description']
-        image_link = request.form['image_link']
-        venue = Venue(name=name, genres=genres, address=address, city=city, state=state, phone=phone, website=website,
-                      facebook_link=facebook_link, seeking_talent=seeking_talent, image_link=image_link, seeking_description=seeking_description)
+        venue.name = form.name.data
+        venue.genres = form.genres.data
+        venue.address = form.address.data
+        venue.city = form.city.data
+        venue.state = form.state.data
+        venue.phone = form.phone.data
+        venue.website = form.website_link.data
+        venue.facebook_link = form.facebook_link.data
+        venue.seeking_talent = form.seeking_talent.data
+        venue.seeking_description = form.seeking_description.data
+        venue.image_link = form.image_link.data
+        
         db.session.add(venue)
         db.session.commit()
         db.session.close()
@@ -301,7 +301,7 @@ def create_venue_submission():
         return render_template('pages/home.html')
     #   on successful db insert, flash success
     # flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    # # TODO: on unsuccessful db insert, flash an error instead.
+    # # DONE: on unsuccessful db insert, flash an error instead.
     # # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
     # # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     # return render_template('pages/home.html')
@@ -321,18 +321,24 @@ def delete_venue(venue_id):
 
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
-    data = [{
-        "id": 4,
-        "name": "Guns N Petals",
-    }, {
-        "id": 5,
-        "name": "Matt Quevedo",
-    }, {
-        "id": 6,
-        "name": "The Wild Sax Band",
-    }]
+    data = []
+    artists = Artist.query.all()    
+    for artist in artists:        
+        data.append({"id": artist.id, "name" : artist.name})
     return render_template('pages/artists.html', artists=data)
+ 
+    # DONE: replace with real data returned from querying the database
+    # data = [{
+    #     "id": 4,
+    #     "name": "Guns N Petals",
+    # }, {
+    #     "id": 5,
+    #     "name": "Matt Quevedo",
+    # }, {
+    #     "id": 6,
+    #     "name": "The Wild Sax Band",
+    # }]
+    # return render_template('pages/artists.html', artists=data)
 
 
 @app.route('/artists/search', methods=['POST'])
@@ -509,19 +515,19 @@ def create_artist_submission():
     # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')  
     error = False
     form = ArtistForm()
+    artist = Artist()
     try:
-        name = request.form['name']
-        genres = request.form['genres']
-        city = request.form['city']
-        state = request.form['state']
-        phone = request.form['phone']
-        website = request.form['website_link']
-        facebook_link = request.form['facebook_link']
-        seeking_venue = form.seeking_venue.data
-        seeking_description = request.form['seeking_description']
-        image_link = request.form['image_link']
-        artist = Artist( name=name, genres=genres, city=city, state=state, phone=phone, website=website,
-                      facebook_link=facebook_link, seeking_venue=seeking_venue, image_link=image_link, seeking_description=seeking_description)
+        artist.name = form.name.data
+        artist.genres = form.genres.data
+        artist.city = form.city.data
+        artist.state = form.state.data
+        artist.phone = form.phone.data
+        artist.website = form.website_link.data
+        artist.facebook_link = form.facebook_link.data
+        artist.seeking_venue = form.seeking_venue.data
+        artist.seeking_description = form.seeking_description.data
+        artist.image_link = form.image_link.data
+
         db.session.add(artist)
         db.session.commit()
     except:
